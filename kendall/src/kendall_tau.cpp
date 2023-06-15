@@ -81,6 +81,28 @@ auto _get_kendall_distance(const std::vector<int>& sorted_cum_sum, const std::ve
     return kendall_distance; 
 }
 
+auto _get_pair_ties(const std::vector<int>& sorted_cum_sum, const std::vector<int>& unsorted_cum_sum) -> int 
+{
+    std::vector<int> obs_diff_indices { 0 }; 
+    for( std::size_t i { 1 }; i < sorted_cum_sum.size(); ++i )
+    {
+        if( sorted_cum_sum.at(i) != sorted_cum_sum.at(i - 1) || unsorted_cum_sum.at(i) != unsorted_cum_sum.at(i - 1) )
+        {
+            obs_diff_indices.push_back(i); 
+        }
+    }
+    obs_diff_indices.push_back(sorted_cum_sum.size()); 
+
+    int n_ties { 0 }; 
+    int obs_space {  }; 
+    for( std::size_t i { 1 }; i < obs_diff_indices.size(); ++i )
+    {
+        obs_space = obs_diff_indices.at(i) - obs_diff_indices.at(i - 1); 
+        n_ties += obs_space * (obs_space - 1) / 2; 
+    }
+    return n_ties; 
+}
+
 auto _get_ind_ties_sorted(const std::vector<int>& sorted_cum_sum) -> int
 {
     int prev_val { sorted_cum_sum.at(0) }; 
@@ -177,7 +199,6 @@ auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vec
     std::vector<int> x_cum_sum {  }; 
     current_cum_sum = 1; 
     times_seen = 1; 
-    // _prev_val = static_cast<std::size_t>( x.at( x_sort_indices.at(0) ) ); 
     _prev_val = static_cast<std::size_t>( x.at( x_sort_indices.at(y_sort_indices.at(0)) ) ); // have to apply indexing twice, but now we dont have to sort 
     for( std::size_t _i { 1 }; _i < x_sort_indices.size(); ++_i ) 
     {
@@ -211,60 +232,37 @@ auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vec
         y_cum_sum.at(i) = _copy_y_cum_cum.at( x_sort_indices.at(i) ); 
     }
 
-    // test printing 
-    // for( int j = 0; j < x.size(); ++j )
-    // {
-    //     // std::cout << "(" << y[j] << ", " << y[y_sort_indices[j]] << ", " << y_cum_sum[j] << ")\n"; 
-    //     std::cout << "(" << x[j] << ", " << y[j] << "): (" << x_cum_sum[j] << ", " << y_cum_sum[j] << ")\n"; 
-    // }
-
-
-
     // now will be working with x_cum_sum and y_cum_sum, both are std::vector<int>, from here on 
     int kendall_distance = _get_kendall_distance(x_cum_sum, y_cum_sum, sup); 
-    // std::cout << "Kendall distance = " << kendall_distance << '\n'; 
-
-
 
     // getting number of ties 
-    // obs_diff_indices are the indices where either previous two x_sum_sum are different or previous two y_cum_sum are different 
-    // std::cout << x_cum_sum.size() << '\n'; 
-    // std::cout << "Going to have " << x_cum_sum.size() << " elements\n"; 
-    std::vector<int> obs_diff_indices { 0 }; 
-    // for( std::size_t i { 1 }; i < x_cum_sum.size() - 1; ++i )
-    for( std::size_t i { 1 }; i < x_cum_sum.size(); ++i )
-    {
-        // std::cout << "x: " << x_cum_sum.at(i) << " vs. " << x_cum_sum.at(i - 1) << '\n'; 
-        // std::cout << "y: " << y_cum_sum.at(i) << " vs. " << y_cum_sum.at(i - 1) << '\n'; 
-        if( x_cum_sum.at(i) != x_cum_sum.at(i - 1) || y_cum_sum.at(i) != y_cum_sum.at(i - 1) )
-        {
-            // std::cout << "Pushing back " << i << '\n'; 
-            obs_diff_indices.push_back(i); 
-        }
-        // else {std::cout << "Skipping " << i << '\n'; }
-    }
-    obs_diff_indices.push_back(x_cum_sum.size()); 
+    // std::vector<int> obs_diff_indices { 0 }; 
+    // for( std::size_t i { 1 }; i < x_cum_sum.size(); ++i )
+    // {
+    //     if( x_cum_sum.at(i) != x_cum_sum.at(i - 1) || y_cum_sum.at(i) != y_cum_sum.at(i - 1) )
+    //     {
+    //         obs_diff_indices.push_back(i); 
+    //     }
+    // }
+    // obs_diff_indices.push_back(x_cum_sum.size()); 
 
-    int n_ties { 0 }; 
-    int obs_space {  }; 
-    for( std::size_t i { 1 }; i < obs_diff_indices.size(); ++i )
-    {
-        // std::cout << obs_diff_indices.at(i) << '\n'; 
-        obs_space = obs_diff_indices.at(i) - obs_diff_indices.at(i - 1); 
-        // std::cout << obs_space << '\n'; 
-        n_ties += obs_space * (obs_space - 1) / 2; 
-    }
-    // std::cout << "There are " << n_ties << " ties\n"; 
+    // int n_ties { 0 }; 
+    // int obs_space {  }; 
+    // for( std::size_t i { 1 }; i < obs_diff_indices.size(); ++i )
+    // {
+    //     obs_space = obs_diff_indices.at(i) - obs_diff_indices.at(i - 1); 
+    //     n_ties += obs_space * (obs_space - 1) / 2; 
+    // }
+    int n_ties = _get_pair_ties(x_cum_sum, y_cum_sum); 
 
     // x and y ties 
     int x_ties = _get_ind_ties_sorted(x_cum_sum); 
     int y_ties = _get_ind_ties_unsorted(y_cum_sum); 
+    
     if( x_ties == v_total || y_ties == v_total ) // have to return NaN here 
     {
         return std::numeric_limits<double>::quiet_NaN(); 
     }
-    // std::cout << "X has " << x_ties << " ties\n"; 
-    // std::cout << "Y has " << y_ties << " ties\n"; 
 
     // final part, constructing values from what we have saved along the way 
     double tau { static_cast<double>( v_total - x_ties - y_ties + n_ties - 2 * kendall_distance ) }; 
