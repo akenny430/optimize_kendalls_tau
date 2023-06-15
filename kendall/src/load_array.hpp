@@ -20,4 +20,8 @@ public:
     LoadArray(const std::string& file_path, const std::string& column); 
 
     auto print_vals() -> void; 
+
+    auto has_nan() -> bool; 
+
+    auto view_data() -> const std::vector<double>&; 
 }; 

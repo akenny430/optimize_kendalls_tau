@@ -118,3 +118,17 @@ auto LoadArray::print_vals() -> void
     << "Standard deviation = " << m_std << '\n' 
     ; 
 }
+
+
+
+auto LoadArray::has_nan() -> bool 
+{
+    return m_n_nan > 0 ? true : false; 
+}
+
+
+
+auto LoadArray::view_data() -> const std::vector<double>& 
+{
+    return m_data; 
+}
