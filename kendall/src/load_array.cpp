@@ -17,6 +17,7 @@ LoadArray::LoadArray()
 LoadArray::LoadArray(const std::vector<double>& copy_data)
 : m_data( copy_data )
 , m_size { static_cast<int>(copy_data.size()) } 
+, m_n_nan { 0 } 
 , m_mean { 0.0 } 
 , m_var { 0.0 } 
 , m_std { 0.0 } 
@@ -37,8 +38,10 @@ LoadArray::LoadArray(const std::vector<double>& copy_data)
 LoadArray::LoadArray(const std::string& file_path, const std::string& column)
 : m_data {  } // empty initialization  
 , m_size { 0 } 
+, m_n_nan { 0 } 
 , m_mean { 0.0 } 
 , m_var { 0.0 } 
+, m_std { 0.0 } 
 {
     std::ifstream file_in_stream ( file_path );
     std::string current_line; 
@@ -87,6 +90,7 @@ LoadArray::LoadArray(const std::string& file_path, const std::string& column)
         catch( const std::invalid_argument& e ) 
         { 
             _data_double = std::numeric_limits<double>::quiet_NaN(); 
+            ++m_n_nan; 
         }
         m_data.push_back(_data_double); 
     }

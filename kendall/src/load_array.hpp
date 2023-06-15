@@ -9,6 +9,8 @@ private:
     std::vector<double> m_data; 
     int m_size; 
 
+    int m_n_nan; 
+
     double m_mean; 
     double m_var; 
     double m_std; 
