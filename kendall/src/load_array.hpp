@@ -6,13 +6,12 @@
 class LoadArray
 {
 private: 
-    std::vector<double> data; 
+    std::vector<double> m_data; 
     int m_size; 
 
-    double mean; 
-    double median; 
-    double var; 
-    double std; 
+    double m_mean; 
+    double m_var; 
+    double m_std; 
 public: 
     LoadArray(); 
     LoadArray(const std::vector<double>& copy_data); 

@@ -12,40 +12,39 @@
 #include <vector> 
 
 LoadArray::LoadArray()
-: data{}, mean{ 0.0 }, median{ 0.0 }, var{ 0.0 }, std{ 0.0 }
+: m_data{  }, m_size { 0 }, m_mean{ 0.0 }, m_var{ 0.0 }, m_std{ 0.0 }
 {}
 
 LoadArray::LoadArray(const std::vector<double>& copy_data)
-: data( copy_data )
+: m_data( copy_data )
 , m_size { static_cast<int>(copy_data.size()) } 
-// having mean and var initialized to 0 
-, mean { 0.0 } 
-, median { 0.0 } 
-, var { 0.0 } 
-, std { 0.0 } 
+// having mean and var initialized to 0.0 here 
+, m_mean { 0.0 } 
+, m_var { 0.0 } 
+, m_std { 0.0 } 
 {
     if( copy_data.empty() ) { throw std::invalid_argument("Passed in copy array cannot be empty"); }
 
     double _n { static_cast<double>(copy_data.size()) }; 
-    mean = std::reduce(copy_data.begin(), copy_data.end()) / _n; 
+    m_mean = std::reduce(copy_data.begin(), copy_data.end()) / _n; 
 
     for( const double& x : copy_data )
     {
-        var += (x - mean) * (x - mean); 
+        m_var += (x - m_mean) * (x - m_mean); 
     }
-    var /= (_n - 1.0); 
-    std = std::sqrt(var); 
+    m_var /= (_n - 1.0); 
+    m_std = std::sqrt(m_var); 
 }
 
 LoadArray::LoadArray(const std::string& file_path, const std::string& column)
-: data {  } // empty initialization  
+: m_data {  } // empty initialization  
 , m_size { 0 } 
-, mean { 0.0 } 
-, var { 0.0 } 
+, m_mean { 0.0 } 
+, m_var { 0.0 } 
 {
     std::ifstream file_in_stream ( file_path );
     std::string current_line;
-    const int _original_size = data.size(); 
+    const int _original_size = m_data.size(); 
 
     // reading first row to get correct location of headers 
     std::getline(file_in_stream, current_line); // TODO: check if input is valid 
@@ -86,26 +85,26 @@ LoadArray::LoadArray(const std::string& file_path, const std::string& column)
         try 
         { 
             _data_double = std::stod(_data_str); 
-            mean += _data_double; 
+            m_mean += _data_double; 
             ++m_size; 
         }
         catch( const std::invalid_argument& e ) 
         { 
             _data_double = std::numeric_limits<double>::quiet_NaN(); 
         }
-        data.push_back(_data_double); 
+        m_data.push_back(_data_double); 
     }
 
     // now have data loaded, need to compute mean, var, std 
     double _n { static_cast<double>(m_size) }; 
-    mean /= _n; 
-    for( const double& x : data )
+    m_mean /= _n; 
+    for( const double& x : m_data )
     {
         if( std::isnan(x) ) { continue; }
-        var += (x - mean) * (x - mean); 
+        m_var += (x - m_mean) * (x - m_mean); 
     }
-    var /= (_n - 1.0); 
-    std = std::sqrt(var); 
+    m_var /= (_n - 1.0); 
+    m_std = std::sqrt(m_var); 
 }
 
 
@@ -114,8 +113,8 @@ auto LoadArray::print_vals() -> void
 {
     std::cout 
     << "Array has " << m_size << " values\n" 
-    << "Mean = " << mean << '\n' 
-    << "Variance = " << var << '\n' 
-    << "Standard deviation = " << std << '\n' 
+    << "Mean = " << m_mean << '\n' 
+    << "Variance = " << m_var << '\n' 
+    << "Standard deviation = " << m_std << '\n' 
     ; 
 }
