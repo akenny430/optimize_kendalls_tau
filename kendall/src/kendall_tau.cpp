@@ -43,6 +43,44 @@ auto _get_permutation_index(const std::vector<double>& vals, const std::vector<s
     return index; 
 }
 
+auto _get_kendall_distance(const std::vector<int>& sorted_cum_sum, const std::vector<int>& unsorted_cum_sum, int sup) -> int
+{
+    std::vector<int> tally_arr ( sup, 0 ); // initializing size of sup with values of 0 
+    std::size_t i { 0 }; 
+    std::size_t k { 0 }; 
+    int idx {  }; 
+
+    int kendall_distance { 0 }; 
+
+    while( i < sorted_cum_sum.size() )
+    {
+        while( k < sorted_cum_sum.size() && sorted_cum_sum.at(i) == sorted_cum_sum.at(k) )
+        {
+            kendall_distance += i; 
+            idx = unsorted_cum_sum.at(k); 
+            while( idx != 0 )
+            {
+                kendall_distance -= tally_arr.at(idx); 
+                idx = idx & (idx - 1); 
+            }
+            ++k; 
+        }
+        while( i < k )
+        {
+            idx = unsorted_cum_sum.at(i); 
+            while( idx < sup )
+            {
+                ++tally_arr.at(idx);
+                idx += idx & (-idx); 
+            }
+            ++i; 
+        }
+    }
+
+    return kendall_distance; 
+}
+
+
 
 auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vector<double>& y) -> float
 {
@@ -77,6 +115,8 @@ auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vec
         y_cum_sum.push_back( current_cum_sum ); 
         --times_seen; 
     }
+    // while we are here, getting max value of y and then adding 1 to get sup for kendall distance 
+    int sup { current_cum_sum + 1 }; 
 
 
     // now permuting the x 
@@ -111,16 +151,7 @@ auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vec
         --times_seen; 
     }
 
-    // finally sorting y with respect to the x permutation 
-    // std::sort(
-    //     y_cum_sum.begin(), 
-    //     y_cum_sum.end(), 
-    //     [&](const int& a, const int& b) {
-    //         // return (vals.at( prev_index.at(a) ) < vals.at( prev_index.at(b) )); 
-    //         // return ( y_cum_sum.at( x_sort_indices.at(a) ) < y_cum_sum.at( x_sort_indices.at(b) ) ); 
-    //         return ( x_sort_indices.at(a) < x_sort_indices.at(b) ); 
-    //     }
-    // ); 
+    // finally sorting y_cum_sum with respect to the x permutation 
     const std::vector<int> _copy_y_cum_cum( y_cum_sum ); 
     for( std::size_t i { 0 }; i < y_cum_sum.size(); ++i )
     {
@@ -128,15 +159,17 @@ auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vec
     }
 
     // test printing 
-    for( int j = 0; j < x.size(); ++j )
-    {
-        // std::cout << "(" << y[j] << ", " << y[y_sort_indices[j]] << ", " << y_cum_sum[j] << ")\n"; 
-        std::cout << "(" << x[j] << ", " << y[j] << "): (" << x_cum_sum[j] << ", " << y_cum_sum[j] << ")\n"; 
-    }
+    // for( int j = 0; j < x.size(); ++j )
+    // {
+    //     // std::cout << "(" << y[j] << ", " << y[y_sort_indices[j]] << ", " << y_cum_sum[j] << ")\n"; 
+    //     std::cout << "(" << x[j] << ", " << y[j] << "): (" << x_cum_sum[j] << ", " << y_cum_sum[j] << ")\n"; 
+    // }
 
 
 
     // now will be working with x_cum_sum and y_cum_sum, both are std::vector<int>, from here on 
+    int kendall_distance = _get_kendall_distance(x_cum_sum, y_cum_sum, sup); 
+    // std::cout << "Kendall distance = " << kendall_distance << '\n'; 
 
 
     return 0.0; 
