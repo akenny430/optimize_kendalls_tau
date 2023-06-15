@@ -5,6 +5,7 @@
 #include <cstddef> 
 #include <iostream> 
 #include <stdexcept> 
+#include <unordered_map> 
 #include <vector> 
 
 
@@ -104,6 +105,30 @@ auto _get_ind_ties_sorted(const std::vector<int>& sorted_cum_sum) -> int
     if( current_count > 1 ) // have to potentially add values to end 
     {
         n_ties += current_count * (current_count - 1) / 2; 
+    }
+    return n_ties; 
+}
+
+auto _get_ind_ties_unsorted(const std::vector<int>& unsorted_cum_sum) -> int
+{
+    int n_ties { 0 }; 
+    std::unordered_map<int, int> digit_tracker {  }; 
+    for( const int& x : unsorted_cum_sum )
+    {
+        if( digit_tracker.find(x) == digit_tracker.end() ){
+            digit_tracker[x] = 1; 
+        }
+        else 
+        {
+            ++digit_tracker[x]; 
+        }
+    }
+    for( const auto& [digit, count] : digit_tracker )
+    {
+        if( count > 1 ) 
+        {
+            n_ties += count * (count - 1) / 2; 
+        }
     }
     return n_ties; 
 }
@@ -233,7 +258,9 @@ auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vec
 
     // x and y ties 
     int x_ties = _get_ind_ties_sorted(x_cum_sum); 
+    int y_ties = _get_ind_ties_unsorted(y_cum_sum); 
     std::cout << "X has " << x_ties << " ties\n"; 
+    std::cout << "Y has " << y_ties << " ties\n"; 
 
 
     return 0.0; 
