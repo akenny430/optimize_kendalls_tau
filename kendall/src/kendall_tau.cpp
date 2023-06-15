@@ -172,6 +172,38 @@ auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vec
     // std::cout << "Kendall distance = " << kendall_distance << '\n'; 
 
 
+
+    // getting number of ties 
+    // obs_diff_indices are the indices where either previous two x_sum_sum are different or previous two y_cum_sum are different 
+    // std::cout << x_cum_sum.size() << '\n'; 
+    // std::cout << "Going to have " << x_cum_sum.size() << " elements\n"; 
+    std::vector<int> obs_diff_indices { 0 }; 
+    // for( std::size_t i { 1 }; i < x_cum_sum.size() - 1; ++i )
+    for( std::size_t i { 1 }; i < x_cum_sum.size(); ++i )
+    {
+        // std::cout << "x: " << x_cum_sum.at(i) << " vs. " << x_cum_sum.at(i - 1) << '\n'; 
+        // std::cout << "y: " << y_cum_sum.at(i) << " vs. " << y_cum_sum.at(i - 1) << '\n'; 
+        if( x_cum_sum.at(i) != x_cum_sum.at(i - 1) || y_cum_sum.at(i) != y_cum_sum.at(i - 1) )
+        {
+            // std::cout << "Pushing back " << i << '\n'; 
+            obs_diff_indices.push_back(i); 
+        }
+        // else {std::cout << "Skipping " << i << '\n'; }
+    }
+    obs_diff_indices.push_back(x_cum_sum.size()); 
+
+    int n_ties { 0 }; 
+    int obs_space {  }; 
+    for( std::size_t i { 1 }; i < obs_diff_indices.size(); ++i )
+    {
+        // std::cout << obs_diff_indices.at(i) << '\n'; 
+        obs_space = obs_diff_indices.at(i) - obs_diff_indices.at(i - 1); 
+        // std::cout << obs_space << '\n'; 
+        n_ties += obs_space * (obs_space - 1) / 2; 
+    }
+    std::cout << "There are " << n_ties << " ties\n"; 
+
+
     return 0.0; 
 }
 
