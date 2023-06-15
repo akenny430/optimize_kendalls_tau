@@ -80,6 +80,34 @@ auto _get_kendall_distance(const std::vector<int>& sorted_cum_sum, const std::ve
     return kendall_distance; 
 }
 
+auto _get_ind_ties_sorted(const std::vector<int>& sorted_cum_sum) -> int
+{
+    int prev_val { sorted_cum_sum.at(0) }; 
+    int current_count { 1 }; 
+    int n_ties { 0 }; 
+    for( std::size_t i { 1 }; i < sorted_cum_sum.size(); ++i )
+    {
+        if( sorted_cum_sum.at(i) == prev_val ) // increase count 
+        {
+            ++current_count; 
+        }
+        else 
+        {
+            if( current_count > 1 ) // we've seen it more than twice, add the difference 
+            {
+                n_ties += current_count * (current_count - 1) / 2; 
+            }
+            current_count = 1; 
+            prev_val = sorted_cum_sum.at(i); 
+        }
+    }
+    if( current_count > 1 ) // have to potentially add values to end 
+    {
+        n_ties += current_count * (current_count - 1) / 2; 
+    }
+    return n_ties; 
+}
+
 
 
 auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vector<double>& y) -> float
@@ -202,6 +230,10 @@ auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vec
         n_ties += obs_space * (obs_space - 1) / 2; 
     }
     std::cout << "There are " << n_ties << " ties\n"; 
+
+    // x and y ties 
+    int x_ties = _get_ind_ties_sorted(x_cum_sum); 
+    std::cout << "X has " << x_ties << " ties\n"; 
 
 
     return 0.0; 
