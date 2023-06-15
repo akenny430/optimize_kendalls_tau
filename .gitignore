@@ -1,3 +1,9 @@
+# ds store apple 
+.DS_Store 
+
+# vscode settings 
+settings.json 
+
 # python compiled files 
 *.pyc 
 
