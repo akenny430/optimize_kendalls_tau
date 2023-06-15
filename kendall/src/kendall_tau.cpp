@@ -25,6 +25,24 @@ auto _get_permutation_index(const std::vector<double>& vals) -> std::vector<std:
     return index; 
 }
 
+// overloading to supply index to use
+auto _get_permutation_index(const std::vector<double>& vals, const std::vector<std::size_t>& prev_index) -> std::vector<std::size_t>
+{
+    std::vector<std::size_t> index ( vals.size(), 0 );
+    for (std::size_t i { 0 }; i < index.size() ; ++i) {
+        index[i] = i;
+        // index[i] = prev_index.at(i);
+    }
+    std::sort(
+        index.begin(), 
+        index.end(), 
+        [&](const int& a, const int& b) {
+            return (vals.at( prev_index.at(a) ) < vals.at( prev_index.at(b) )); 
+        }
+    ); 
+    return index; 
+}
+
 
 auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vector<double>& y) -> float
 {
@@ -33,11 +51,9 @@ auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vec
 
     // first permutations of y 
     std::vector<std::size_t> y_sort_indices = _get_permutation_index(y); 
-
     std::vector<int> y_cum_sum {  }; 
     int current_cum_sum { 1 }; // always starts with 1 
     int times_seen { 1 }; 
-    // for( const std::size_t index : y_sort_indices ) 
     std::size_t _prev_val { static_cast<std::size_t>( y.at( y_sort_indices.at(0) ) ) }; 
     for( std::size_t _i { 1 }; _i < y_sort_indices.size(); ++_i ) 
     {
@@ -55,12 +71,72 @@ auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vec
         ++current_cum_sum; 
         _prev_val = y.at( y_sort_indices.at(_i) ); 
     }
+    // adding last bit of values 
+    while( times_seen > 0 )
+    {
+        y_cum_sum.push_back( current_cum_sum ); 
+        --times_seen; 
+    }
+
+
+    // now permuting the x 
+    std::vector<std::size_t> x_sort_indices = _get_permutation_index(x, y_sort_indices);  
+    std::vector<int> x_cum_sum {  }; 
+    current_cum_sum = 1; 
+    times_seen = 1; 
+    // _prev_val = static_cast<std::size_t>( x.at( x_sort_indices.at(0) ) ); 
+    _prev_val = static_cast<std::size_t>( x.at( x_sort_indices.at(y_sort_indices.at(0)) ) ); // have to apply indexing twice, but now we dont have to sort 
+    for( std::size_t _i { 1 }; _i < x_sort_indices.size(); ++_i ) 
+    {
+        // if( x.at( x_sort_indices.at(_i) ) == _prev_val )
+        if( x.at( x_sort_indices.at(y_sort_indices.at(_i)) ) == _prev_val )
+        {
+            ++times_seen; 
+            continue; 
+        }
+        while( times_seen > 0 )
+        {
+            x_cum_sum.push_back( current_cum_sum ); 
+            --times_seen; 
+        }
+        times_seen = 1; 
+        ++current_cum_sum; 
+        // _prev_val = x.at( x_sort_indices.at(_i) ); 
+        _prev_val = x.at( x_sort_indices.at(y_sort_indices.at(_i)) ); 
+    }
+    // adding last bit of values 
+    while( times_seen > 0 )
+    {
+        x_cum_sum.push_back( current_cum_sum ); 
+        --times_seen; 
+    }
+
+    // finally sorting y with respect to the x permutation 
+    // std::sort(
+    //     y_cum_sum.begin(), 
+    //     y_cum_sum.end(), 
+    //     [&](const int& a, const int& b) {
+    //         // return (vals.at( prev_index.at(a) ) < vals.at( prev_index.at(b) )); 
+    //         // return ( y_cum_sum.at( x_sort_indices.at(a) ) < y_cum_sum.at( x_sort_indices.at(b) ) ); 
+    //         return ( x_sort_indices.at(a) < x_sort_indices.at(b) ); 
+    //     }
+    // ); 
+    const std::vector<int> _copy_y_cum_cum( y_cum_sum ); 
+    for( std::size_t i { 0 }; i < y_cum_sum.size(); ++i )
+    {
+        y_cum_sum.at(i) = _copy_y_cum_cum.at( x_sort_indices.at(i) ); 
+    }
 
     // test printing 
-    for( int j = 0; j < 20; ++j )
+    for( int j = 0; j < x.size(); ++j )
     {
-        std::cout << "(" << y[y_sort_indices[j]] << ", " << y_cum_sum[j] << ")\n"; 
+        // std::cout << "(" << y[j] << ", " << y[y_sort_indices[j]] << ", " << y_cum_sum[j] << ")\n"; 
+        std::cout << "(" << x[j] << ", " << y[j] << "): (" << x_cum_sum[j] << ", " << y_cum_sum[j] << ")\n"; 
     }
+
+
+
+    // now will be working with x_cum_sum and y_cum_sum, both are std::vector<int>, from here on 
 
 
     return 0.0; 
@@ -72,6 +148,8 @@ auto compute_kendall_tau(const LoadArray& x, const LoadArray& y) -> double
 {
     // if( x.m_size != y.m_size ) { throw std::invalid_argument("Passed in LoadArray's do not have same size!"); }
     if( x.m_data.size() != y.m_data.size() ) { throw std::invalid_argument("Passed in LoadArray's do not have same size!"); }
+
+    // std::cout << x.m_data[x.m_data.size() - 1] << ", " << y.m_data[y.m_data.size() - 1] << '\n'; 
 
     // if we don't have any NaN data points, compute right away without any pre-processing 
     if( !(x.has_nan() || y.has_nan()) )
