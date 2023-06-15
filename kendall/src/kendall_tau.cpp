@@ -3,8 +3,10 @@
 
 #include <cmath> 
 #include <cstddef> 
+#include <future> 
 #include <iostream> 
 #include <stdexcept> 
+#include <thread> 
 #include <unordered_map> 
 #include <vector> 
 
@@ -232,33 +234,21 @@ auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vec
         y_cum_sum.at(i) = _copy_y_cum_cum.at( x_sort_indices.at(i) ); 
     }
 
-    // now will be working with x_cum_sum and y_cum_sum, both are std::vector<int>, from here on 
+    // can perform these 4 operations on different threads 
     int kendall_distance = _get_kendall_distance(x_cum_sum, y_cum_sum, sup); 
-
-    // getting number of ties 
-    // std::vector<int> obs_diff_indices { 0 }; 
-    // for( std::size_t i { 1 }; i < x_cum_sum.size(); ++i )
-    // {
-    //     if( x_cum_sum.at(i) != x_cum_sum.at(i - 1) || y_cum_sum.at(i) != y_cum_sum.at(i - 1) )
-    //     {
-    //         obs_diff_indices.push_back(i); 
-    //     }
-    // }
-    // obs_diff_indices.push_back(x_cum_sum.size()); 
-
-    // int n_ties { 0 }; 
-    // int obs_space {  }; 
-    // for( std::size_t i { 1 }; i < obs_diff_indices.size(); ++i )
-    // {
-    //     obs_space = obs_diff_indices.at(i) - obs_diff_indices.at(i - 1); 
-    //     n_ties += obs_space * (obs_space - 1) / 2; 
-    // }
     int n_ties = _get_pair_ties(x_cum_sum, y_cum_sum); 
-
-    // x and y ties 
     int x_ties = _get_ind_ties_sorted(x_cum_sum); 
     int y_ties = _get_ind_ties_unsorted(y_cum_sum); 
-    
+    // auto p_kendall_distance = std::async(std::launch::async, &_get_kendall_distance, x_cum_sum, y_cum_sum, sup); 
+    // auto p_n_ties = std::async(std::launch::async, &_get_pair_ties, x_cum_sum, y_cum_sum); 
+    // auto p_x_ties = std::async(std::launch::async, &_get_ind_ties_sorted, x_cum_sum); 
+    // auto p_y_ties = std::async(std::launch::async, &_get_ind_ties_unsorted, y_cum_sum); 
+
+    // int kendall_distance { p_kendall_distance.get() }; 
+    // int n_ties { p_n_ties.get() }; 
+    // int x_ties { p_x_ties.get() }; 
+    // int y_ties { p_y_ties.get() }; 
+
     if( x_ties == v_total || y_ties == v_total ) // have to return NaN here 
     {
         return std::numeric_limits<double>::quiet_NaN(); 
