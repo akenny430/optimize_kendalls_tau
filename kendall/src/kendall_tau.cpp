@@ -254,16 +254,24 @@ auto _compute_kendall_tau_with_full(const std::vector<double>& x, const std::vec
         // std::cout << obs_space << '\n'; 
         n_ties += obs_space * (obs_space - 1) / 2; 
     }
-    std::cout << "There are " << n_ties << " ties\n"; 
+    // std::cout << "There are " << n_ties << " ties\n"; 
 
     // x and y ties 
     int x_ties = _get_ind_ties_sorted(x_cum_sum); 
     int y_ties = _get_ind_ties_unsorted(y_cum_sum); 
-    std::cout << "X has " << x_ties << " ties\n"; 
-    std::cout << "Y has " << y_ties << " ties\n"; 
+    if( x_ties == v_total || y_ties == v_total ) // have to return NaN here 
+    {
+        return std::numeric_limits<double>::quiet_NaN(); 
+    }
+    // std::cout << "X has " << x_ties << " ties\n"; 
+    // std::cout << "Y has " << y_ties << " ties\n"; 
 
+    // final part, constructing values from what we have saved along the way 
+    double tau { static_cast<double>( v_total - x_ties - y_ties + n_ties - 2 * kendall_distance ) }; 
+    tau /= std::sqrt( static_cast<double>( v_total - x_ties ) ); 
+    tau /= std::sqrt( static_cast<double>( v_total - y_ties ) ); 
 
-    return 0.0; 
+    return tau; 
 }
 
 
