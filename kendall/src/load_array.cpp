@@ -1,6 +1,5 @@
 #include "./load_array.hpp"
 
-// #include <algorithm> 
 #include <cmath> 
 #include <fstream> 
 #include <iostream> 
@@ -18,7 +17,6 @@ LoadArray::LoadArray()
 LoadArray::LoadArray(const std::vector<double>& copy_data)
 : m_data( copy_data )
 , m_size { static_cast<int>(copy_data.size()) } 
-// having mean and var initialized to 0.0 here 
 , m_mean { 0.0 } 
 , m_var { 0.0 } 
 , m_std { 0.0 } 
@@ -43,8 +41,7 @@ LoadArray::LoadArray(const std::string& file_path, const std::string& column)
 , m_var { 0.0 } 
 {
     std::ifstream file_in_stream ( file_path );
-    std::string current_line;
-    const int _original_size = m_data.size(); 
+    std::string current_line; 
 
     // reading first row to get correct location of headers 
     std::getline(file_in_stream, current_line); // TODO: check if input is valid 
@@ -62,8 +59,8 @@ LoadArray::LoadArray(const std::string& file_path, const std::string& column)
         }
         ++curr_index; 
     }
-    if( curr_index == 0 ) { throw std::invalid_argument("Supplied file not found!"); }
-    else if( column_index < 0 ) { throw std::domain_error("Passed invalid column!"); }
+    if( curr_index == 0 ) { throw std::invalid_argument("Supplied file not found!"); } // never read in anything, means wrong file name passed 
+    else if( column_index < 0 ) { throw std::domain_error("Passed invalid column!"); } // could not find column we wanted 
 
     // moving through remaining rows collecting data 
     std::string _data_str; 
@@ -80,8 +77,7 @@ LoadArray::LoadArray(const std::string& file_path, const std::string& column)
         }
         std::getline(current_line_stream, _data_str, ','); 
 
-        // TODO: handle empty values 
-        // _data_double = std::stod(_data_str); 
+        // if it cannot convert to double, set value to NaN 
         try 
         { 
             _data_double = std::stod(_data_str); 
