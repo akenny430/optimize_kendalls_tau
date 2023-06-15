@@ -3,3 +3,6 @@
 
 # data generated 
 data/data/*
+
+# any testing files 
+*.out 
