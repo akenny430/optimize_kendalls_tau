@@ -54,7 +54,6 @@ LoadArray::LoadArray(const std::string& file_path, const std::string& column)
     int curr_index { 0 }; 
     while( std::getline(current_line_stream, _buffer_str, ',') )
     {
-        std::cout << _buffer_str << '\n'; 
         if( _buffer_str == column )
         {
             column_index = curr_index; 
@@ -121,14 +120,7 @@ auto LoadArray::print_vals() -> void
 
 
 
-auto LoadArray::has_nan() -> bool 
+auto LoadArray::has_nan() const -> bool 
 {
     return m_n_nan > 0 ? true : false; 
-}
-
-
-
-auto LoadArray::view_data() -> const std::vector<double>& 
-{
-    return m_data; 
 }

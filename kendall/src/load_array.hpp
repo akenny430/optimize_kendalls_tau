@@ -5,7 +5,7 @@
 
 class LoadArray
 {
-private: 
+public: 
     std::vector<double> m_data; 
     int m_size; 
 
@@ -21,7 +21,5 @@ public:
 
     auto print_vals() -> void; 
 
-    auto has_nan() -> bool; 
-
-    auto view_data() -> const std::vector<double>&; 
+    auto has_nan() const -> bool; 
 }; 
