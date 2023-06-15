@@ -44,6 +44,7 @@ LoadArray::LoadArray(const std::string& file_path, const std::string& column)
 , m_std { 0.0 } 
 {
     std::ifstream file_in_stream ( file_path );
+    if( file_in_stream.fail() ) { throw std::invalid_argument("Supplied file not found!"); }
     std::string current_line; 
 
     // reading first row to get correct location of headers 
@@ -61,7 +62,10 @@ LoadArray::LoadArray(const std::string& file_path, const std::string& column)
         }
         ++curr_index; 
     }
-    if( curr_index == 0 ) { throw std::invalid_argument("Supplied file not found!"); } // never read in anything, means wrong file name passed 
+    if( curr_index == 0 ) { // no delimeter, may be first element 
+        std::getline(current_line_stream, _buffer_str); 
+        if( _buffer_str != column ) { throw std::domain_error("Passed invalid column!"); }
+    } 
     else if( column_index < 0 ) { throw std::domain_error("Passed invalid column!"); } // could not find column we wanted 
 
     // moving through remaining rows collecting data 
@@ -70,14 +74,21 @@ LoadArray::LoadArray(const std::string& file_path, const std::string& column)
     while( std::getline(file_in_stream, current_line) )
     {
         // getting individual value from each line 
-        std::stringstream current_line_stream ( current_line ); // TODO: do we have to initialize this every time? 
-        curr_index = 0; 
-        while (curr_index < column_index)
+        if( column_index < 0 ) // single column, entire line is data 
         {
-            ++curr_index; 
-            std::getline(current_line_stream, _buffer_str, ','); 
+            _data_str = current_line; 
         }
-        std::getline(current_line_stream, _data_str, ','); 
+        else // have to parse by comma 
+        {
+            std::stringstream current_line_stream ( current_line ); // TODO: do we have to initialize this every time? 
+            curr_index = 0; 
+            while (curr_index < column_index)
+            {
+                ++curr_index; 
+                std::getline(current_line_stream, _buffer_str, ','); 
+            }
+            std::getline(current_line_stream, _data_str, ','); 
+        }
 
         // if it cannot convert to double, set value to NaN 
         try 
