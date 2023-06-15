@@ -6,6 +6,7 @@ from typing import (
     Optional, 
 )
 
+import numpy as np 
 import polars as pl 
 
 _DATA_PATH: Path = Path("..", "data", "data") 
@@ -26,19 +27,26 @@ class KendallResult(NamedTuple):
             return f"({self.X}, {self.Y}): Unable to compute Kendall's Tau!"
         return f"({self.X}, {self.Y}), {self.N:>4,}: {int( round(self.Time, 0) ):>15,}ns"
 
-def compute_corr_kendall(x: pl.Series, y: pl.Series) -> Optional[float]: 
+def compute_corr_kendall(x: np.ndarray, y: np.ndarray) -> Optional[float]: 
     """
     Compute Kendall's Tau (variation "b")
     """
     tau: Optional[float] = None 
 
     try: 
-        tau = st.kendalltau(
-            x=x, 
-            y=y, 
-            nan_policy="omit", 
-            variant="b", 
-        )[0] 
+        valid = np.isfinite(x) & np.isfinite(y)
+        if not valid.all(): 
+            tau = st.kendalltau(
+                x=x[valid], 
+                y=y[valid], 
+                variant="b", 
+            )[0] 
+        else: 
+            tau = st.kendalltau(
+                x=x, 
+                y=y, 
+                variant="b", 
+            )[0] 
     except: 
         pass 
 
@@ -75,8 +83,8 @@ for i, n1 in enumerate(_FILE_LIST):
 
         t0: float = time.perf_counter_ns() 
         tau: Optional[float] = compute_corr_kendall(
-            x=whole_df.get_column("x"), 
-            y=whole_df.get_column("y"), 
+            x=whole_df.get_column("x").to_numpy(), 
+            y=whole_df.get_column("y").to_numpy(), 
         )
         tf: float = time.perf_counter_ns()
         elapsed_time: float = float(tf - t0)
