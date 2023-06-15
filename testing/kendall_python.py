@@ -9,7 +9,7 @@ from typing import (
 import polars as pl 
 
 _DATA_PATH: Path = Path("..", "data", "data") 
-_FILE_LIST: list[str] = [f"{x:02}" for x in range(1, 11)] 
+_FILE_LIST: list[str] = [f"{x:02}" for x in range(1, 16)] 
 
 class KendallResult(NamedTuple): 
     """
