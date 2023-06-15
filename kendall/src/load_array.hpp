@@ -7,6 +7,7 @@ class LoadArray
 {
 private: 
     std::vector<double> data; 
+    int m_size; 
 
     double mean; 
     double median; 
