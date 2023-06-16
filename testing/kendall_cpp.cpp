@@ -57,14 +57,12 @@ auto main() -> int
         x = LoadArray(_FILE_PATH_BEGINNING + ids_to_test.at(i) + _CSV, "X"); 
         for( j = i + 1; j < ids_to_test.size(); ++j ) 
         {
-            auto t0 = std::chrono::high_resolution_clock::now(); 
-
             y = LoadArray(_FILE_PATH_BEGINNING + ids_to_test.at(j) + _CSV, "X"); 
 
+            auto t0 = std::chrono::high_resolution_clock::now(); 
             tau = compute_kendall_tau(x, y); 
-
             auto tf = std::chrono::high_resolution_clock::now(); 
-            // std::cout << "tau = " << tau << '\n'; 
+
             time = static_cast<double>( std::chrono::duration_cast<std::chrono::nanoseconds>(tf - t0).count() ); 
             // std::cout << "Computed in " << std::chrono::duration_cast<std::chrono::nanoseconds>(tf - t0).count() << "ns\n"; 
 
